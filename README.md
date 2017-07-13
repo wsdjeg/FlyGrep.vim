@@ -1,7 +1,19 @@
 # FlyGrep.vim [WIP]
 > Fly grep in vim
 
-**NOTE:** this plugin is split from [SpaceVim's #705](https://github.com/SpaceVim/SpaceVim/pull/705), and still work in process.
+this plugin is split from [SpaceVim's #705](https://github.com/SpaceVim/SpaceVim/pull/705).
+
+## usage
+
+```
+:FlyGrep
+```
+
+you also can define custom mapping, for example:
+
+```vim
+nnoremap <Leader>fg :FlyGrep<cr>
+```
 
 Key Binding |	Description
 -----------| -----------
