@@ -55,7 +55,7 @@ function! SpaceVim#mapping#search#default_tool()
     if has_key(s:search_tools, 'default_exe')
         return s:search_tools.default_exe
     else
-        for t in g:spacevim_search_tools
+        for t in g:FlyGrep_search_tools
             if executable(t)
                 let s:search_tools.default_exe = t
                 return t

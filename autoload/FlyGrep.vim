@@ -4,7 +4,7 @@ let s:SYS = SpaceVim#api#import('system')
 let s:grepid = 0
 
 
-function! SpaceVim#plugins#flygrep#open() abort
+function! FlyGrep#open() abort
     rightbelow split __flygrep__
     setlocal buftype=nofile bufhidden=wipe nobuflisted nolist noswapfile nowrap cursorline nospell nonu norelativenumber
     let save_tve = &t_ve

@@ -24,3 +24,9 @@
 " FlyGrep will start to searching code after a delay, the default value is
 " 500ms.
 let g:FlyGrep_input_delay = 500
+
+""
+" A list of searching tools will be userd.
+let g:FlyGrep_search_tools = ['ag', 'rg', 'grep', 'pt', 'ack']
+
+command! -nargs=0 FlyGrep call FlyGrep#open()
