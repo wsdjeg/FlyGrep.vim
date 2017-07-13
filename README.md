@@ -12,7 +12,7 @@ this plugin is split from [SpaceVim's #705](https://github.com/SpaceVim/SpaceVim
 you also can define custom mapping, for example:
 
 ```vim
-nnoremap <Leader>fg :FlyGrep<cr>
+nnoremap <Space>>sgG :FlyGrep<cr>
 ```
 
 Key Binding |	Description
