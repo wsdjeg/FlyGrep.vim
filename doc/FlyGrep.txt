@@ -26,5 +26,8 @@ FlyGrep will start to searching code after a delay, the default value is
                                                       *g:FlyGrep_search_tools*
 A list of searching tools will be userd.
 
+                                                 *g:FlyGrep_enable_statusline*
+Enable FlyGrep statusline
+
 
 vim:tw=78:ts=8:ft=help:norl:

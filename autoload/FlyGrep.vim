@@ -12,6 +12,7 @@ function! FlyGrep#open() abort
     " setlocal nomodifiable
     setf SpaceVimFlyGrep
     redraw!
+    let &l:statusline = FlyGrep#statusline()
     call s:MPT.open()
     let &t_ve = save_tve
 endfunction
@@ -188,10 +189,7 @@ let s:MPT._function_key = {
             \ }
 
 " statusline api
-function! SpaceVim#plugins#flygrep#lineNr() abort
-    if getline(1) ==# ''
-        return ''
-    else
-        return line('.') . '/' . line('$')
-    endif
+function! FlyGrep#statusline() abort
+    let st = ' FlyGrep %{getcwd()} '
+    return st . "%{getline(1) ==# '' ? '' : (line('.') . '/' . line('$'))}"
 endfunction

@@ -29,4 +29,8 @@ let g:FlyGrep_input_delay = 500
 " A list of searching tools will be userd.
 let g:FlyGrep_search_tools = ['ag', 'rg', 'grep', 'pt', 'ack']
 
+""
+" Enable FlyGrep statusline
+let g:FlyGrep_enable_statusline = 1
+
 command! -nargs=0 FlyGrep call FlyGrep#open()
