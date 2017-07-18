@@ -43,13 +43,13 @@ func! s:self._handle_input() abort
             call call(self._function_key[char], [])
             continue
         endif
-        if char ==# "\<Right>" || char == 6
+        if char ==# "\<Right>" || char == 6 || char ==# "\<C-f>"
             let self._prompt.begin = self._prompt.begin . self._prompt.cursor
             let self._prompt.cursor = matchstr(self._prompt.end, '^.')
             let self._prompt.end = substitute(self._prompt.end, '^.', '', 'g')
             call self._build_prompt()
             continue
-        elseif char ==# "\<Left>"  || char == 2
+        elseif char ==# "\<Left>"  || char == 2 || char ==# "\<C-b>"
             if self._prompt.begin !=# ''
                 let self._prompt.end = self._prompt.cursor . self._prompt.end
                 let self._prompt.cursor = matchstr(self._prompt.begin, '.$')
@@ -79,10 +79,10 @@ func! s:self._handle_input() abort
             let self._prompt.cursor = ''
             let self._prompt.end = ''
             call self._build_prompt()
-        elseif char ==# "\<bs>"
+        elseif char ==# "\<bs>" || char ==# "\<C-h>"
             let self._prompt.begin = substitute(self._prompt.begin,'.$','','g')
             call self._build_prompt()
-        elseif char == self._keys.close
+        elseif char == self._keys.close || char ==# "\<C-c>"
             call self.close()
             break
         elseif char ==# "\<FocusLost>" || char ==# "\<FocusGained>" || char2nr(char) == 128
