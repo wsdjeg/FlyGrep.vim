@@ -16,15 +16,15 @@ Fly grep in vim, written in pure vim script for MacVim, gvim and vim version
 ==============================================================================
 CONFIGURATION                                                 *FlyGrep-config*
 
-FlyGrep has strong default options, but you can also change the option
+FlyGrep has strong default options, but you can also change the options
 yourself.
 
                                                        *g:FlyGrep_input_delay*
-FlyGrep will start to searching code after a delay, the default value is
+FlyGrep will start searching code after a delay, the default value is
 500ms.
 
                                                       *g:FlyGrep_search_tools*
-A list of searching tools will be userd.
+A list of searching tools will be used.
 
                                                  *g:FlyGrep_enable_statusline*
 Enable FlyGrep statusline
