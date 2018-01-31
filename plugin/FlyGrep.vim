@@ -33,4 +33,4 @@ let g:FlyGrep_search_tools = ['ag', 'rg', 'grep', 'pt', 'ack']
 " Enable FlyGrep statusline
 let g:FlyGrep_enable_statusline = 1
 
-command! -nargs=0 FlyGrep call FlyGrep#open()
+command! -nargs=0 FlyGrep call FlyGrep#open({})
