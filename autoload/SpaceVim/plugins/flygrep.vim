@@ -1,26 +1,46 @@
+"=============================================================================
+" flygrep.vim --- Grep on the fly in SpaceVim
+" Copyright (c) 2016-2017 Shidong Wang & Contributors
+" Author: Shidong Wang < wsdjeg at 163.com >
+" URL: https://spacevim.org
+" License: GPLv3
+"=============================================================================
+
 " Loadding SpaceVim api {{{
 scriptencoding utf-8
 let s:MPT = SpaceVim#api#import('prompt')
 let s:JOB = SpaceVim#api#import('job')
 let s:SYS = SpaceVim#api#import('system')
 let s:BUFFER = SpaceVim#api#import('vim#buffer')
+let s:LIST = SpaceVim#api#import('data#list')
 "}}}
 
 " Init local options: {{{
 let s:grep_expr = ''
-let [s:grep_default_exe, s:grep_default_opt, s:grep_default_ropt] = SpaceVim#mapping#search#default_tool()
+let [
+      \ s:grep_default_exe,
+      \ s:grep_default_opt,
+      \ s:grep_default_ropt,
+      \ s:grep_default_expr_opt,
+      \ s:grep_default_fix_string_opt,
+      \ s:grep_ignore_case,
+      \ s:grep_smart_case
+      \ ] = SpaceVim#mapping#search#default_tool()
 let s:grep_timer_id = 0
 let s:grepid = 0
+let s:grep_history = []
+let s:complete_input_history_num = [0,0]
 " }}}
 
 " grep local funcs:{{{
 " @vimlint(EVL103, 1, a:timer)
+let s:current_grep_pattern = ''
 function! s:grep_timer(timer) abort
-  let cmd = s:get_search_cmd(join(split(s:grep_expr), '.*'))
+  let s:current_grep_pattern = join(split(s:grep_expr), '.*')
+  let cmd = s:get_search_cmd(s:current_grep_pattern)
   call SpaceVim#logger#info('grep cmd: ' . string(cmd))
   let s:grepid =  s:JOB.start(cmd, {
         \ 'on_stdout' : function('s:grep_stdout'),
-        \ 'on_stderr' : function('s:grep_stderr'),
         \ 'in_io' : 'null',
         \ 'on_exit' : function('s:grep_exit'),
         \ })
@@ -28,6 +48,16 @@ endfunction
 
 function! s:get_search_cmd(expr) abort
   let cmd = [s:grep_exe] + s:grep_opt
+  if &ignorecase
+    let cmd += s:grep_ignore_case
+  endif
+  if &smartcase
+    let cmd += s:grep_smart_case
+  endif
+  if s:grep_mode ==# 'string'
+    let cmd += s:grep_default_fix_string_opt
+  endif
+  let cmd += s:grep_default_expr_opt
   if !empty(s:grep_files) && type(s:grep_files) == 3
     return cmd + [a:expr] + s:grep_files
   elseif !empty(s:grep_files) && type(s:grep_files) == 1
@@ -50,19 +80,23 @@ function! s:flygrep(expr) abort
   catch
   endtr
   hi def link FlyGrepPattern MoreMsg
-  let s:hi_id = matchadd('FlyGrepPattern', '\c' . join(split(a:expr), '\|'), 1)
+  let s:hi_id = matchadd('FlyGrepPattern', join(split(a:expr), '\|'), 1)
   let s:grep_expr = a:expr
+  try
+    call timer_stop(s:grep_timer_id)
+  catch
+  endtry
   let s:grep_timer_id = timer_start(200, function('s:grep_timer'), {'repeat' : 1})
 endfunction
 
-" set default handle func: s:flygrep
-let s:MPT._handle_fly = function('s:flygrep')
 " }}}
 
 " filter local funcs: {{{
 " @vimlint(EVL103, 0, a:timer)
 let s:filter_file = ''
 function! s:start_filter() abort
+  let s:mode = 'f'
+  redrawstatus
   let s:MPT._handle_fly = function('s:filter')
   let s:MPT._prompt = {
         \ 'mpt' : s:MPT._prompt.mpt,
@@ -97,10 +131,8 @@ endfunction
 
 function! s:filter_timer(timer) abort
   let cmd = s:get_filter_cmd(join(split(s:grep_expr), '.*'))
-  call SpaceVim#logger#info('filter cmd: ' . string(cmd))
   let s:grepid =  s:JOB.start(cmd, {
         \ 'on_stdout' : function('s:grep_stdout'),
-        \ 'on_stderr' : function('s:grep_stderr'),
         \ 'in_io' : 'null',
         \ 'on_exit' : function('s:grep_exit'),
         \ })
@@ -109,6 +141,22 @@ endfunction
 function! s:get_filter_cmd(expr) abort
   let cmd = [s:grep_exe] + SpaceVim#mapping#search#getFopt(s:grep_exe)
   return cmd + [a:expr] + [s:filter_file]
+endfunction
+" }}}
+
+" replace local funcs {{{
+function! s:start_replace() abort
+  let s:mode = 'r'
+  try 
+    call matchdelete(s:hi_id)
+  catch
+  endtr
+  let replace_text = s:current_grep_pattern
+  if !empty(replace_text)
+    call SpaceVim#plugins#iedit#start({'expr' : replace_text}, line('w0'), line('w$'))
+  endif
+  let s:hi_id = matchadd('FlyGrepPattern', join(split(replace_text), '\|'), 1)
+  redrawstatus
 endfunction
 " }}}
 
@@ -124,7 +172,8 @@ function! s:close_buffer() abort
   if s:grep_timer_id != 0
     call timer_stop(s:grep_timer_id)
   endif
-  q
+  noautocmd pclose
+  noautocmd q
 endfunction
 let s:MPT._onclose = function('s:close_buffer')
 " }}}
@@ -143,29 +192,24 @@ endfunction
 let s:MPT._oninputpro = function('s:close_grep_job')
 " }}}
 
+function! s:file_line(line) abort
+  return matchstr(a:line, '[^:]*:\d\+:')
+endfunction
+
 " FlyGrep job handles: {{{
 " @vimlint(EVL103, 1, a:data)
 " @vimlint(EVL103, 1, a:id)
 " @vimlint(EVL103, 1, a:event)
 function! s:grep_stdout(id, data, event) abort
   let datas =filter(a:data, '!empty(v:val)')
-  if getline(1) ==# ''
-    call setline(1, datas)
-  else
-    call append('$', datas)
+  let datas = s:LIST.uniq_by_func(datas, function('s:file_line'))
+  if bufnr('%') == s:flygrep_buffer_id
+    if getline(1) ==# ''
+      call setline(1, datas)
+    else
+      call append('$', datas)
+    endif
   endif
-  call s:MPT._build_prompt()
-endfunction
-
-function! s:grep_stderr(id, data, event) abort
-  let datas =filter(a:data, '!empty(v:val)')
-  if getline(1) ==# ''
-    call setline(1, datas)
-  else
-    call append('$', datas)
-  endif
-  call append('$', 'job:' . string(s:get_search_cmd(s:grep_expr)))
-  call s:MPT._build_prompt()
 endfunction
 
 function! s:grep_exit(id, data, event) abort
@@ -184,7 +228,10 @@ function! s:next_item() abort
   else
     normal! j
   endif
-  redrawstatus
+  if s:preview_able == 1
+    call s:preview()
+  endif
+  redraw
   call s:MPT._build_prompt()
 endfunction
 
@@ -194,11 +241,15 @@ function! s:previous_item() abort
   else
     normal! k
   endif
-  redrawstatus
+  if s:preview_able == 1
+    call s:preview()
+  endif
+  redraw
   call s:MPT._build_prompt()
 endfunction
 
 function! s:open_item() abort
+  call add(s:grep_history, s:grep_expr)
   let s:MPT._handle_fly = function('s:flygrep')
   if getline('.') !=# ''
     if s:grepid != 0
@@ -249,6 +300,78 @@ function! s:move_cursor() abort
   call s:MPT._build_prompt()
 endfunction
 
+let s:preview_able = 0
+function! s:toggle_preview() abort
+  if s:preview_able == 0
+    let s:preview_able = 1
+    call s:preview()
+  else
+    pclose
+    let s:preview_able = 0
+  endif
+  redraw!
+  call s:MPT._build_prompt()
+endfunction
+
+function! s:preview() abort
+  let line = getline('.')
+  let filename = fnameescape(split(line, ':\d\+:')[0])
+  let linenr = matchstr(line, ':\d\+:')[1:-2]
+  exe 'silent pedit! +' . linenr . ' ' . filename
+  resize 18
+endfunction
+
+let s:grep_mode = 'expr'
+function! s:toggle_expr_mode() abort
+  if s:grep_mode ==# 'expr'
+    let s:grep_mode = 'string'
+  else
+    let s:grep_mode = 'expr'
+  endif
+  call s:MPT._oninputpro()
+  call s:MPT._handle_fly(s:MPT._prompt.begin . s:MPT._prompt.cursor .s:MPT._prompt.end)
+endfunction
+
+let s:complete_input_history_base = ''
+function! s:previous_match_history() abort
+  if s:complete_input_history_num == [0,0]
+    let s:complete_input_history_base = s:MPT._prompt.begin
+    let s:MPT._prompt.cursor = ''
+    let s:MPT._prompt.end = ''
+  else
+    let s:MPT._prompt.begin = s:complete_input_history_base
+  endif
+  let s:complete_input_history_num[0] += 1
+  let s:MPT._prompt.begin = s:complete_input_history(s:complete_input_history_base, s:complete_input_history_num)
+  normal! "_ggdG
+  call s:MPT._handle_fly(s:MPT._prompt.begin . s:MPT._prompt.cursor .s:MPT._prompt.end)
+endfunction
+
+function! s:next_match_history() abort
+
+  if s:complete_input_history_num == [0,0]
+    let s:complete_input_history_base = s:MPT._prompt.begin
+    let s:MPT._prompt.cursor = ''
+    let s:MPT._prompt.end = ''
+  else
+    let s:MPT._prompt.begin = s:complete_input_history_base
+  endif
+  let s:complete_input_history_num[1] += 1
+  let s:MPT._prompt.begin = s:complete_input_history(s:complete_input_history_base, s:complete_input_history_num)
+  normal! "_ggdG
+  call s:MPT._handle_fly(s:MPT._prompt.begin . s:MPT._prompt.cursor .s:MPT._prompt.end)
+endfunction
+
+function! s:complete_input_history(str,num) abort
+    let results = filter(copy(s:grep_history), "v:val =~# '^' . a:str")
+    if len(results) > 0
+        call add(results, a:str)
+        let index = ((len(results) - 1) - a:num[0] + a:num[1]) % len(results)
+        return results[index]
+    else
+        return a:str
+    endif
+endfunction
 let s:MPT._function_key = {
       \ "\<Tab>" : function('s:next_item'),
       \ "\<C-j>" : function('s:next_item'),
@@ -260,6 +383,11 @@ let s:MPT._function_key = {
       \ "\<LeftMouse>" : function('s:move_cursor'),
       \ "\<2-LeftMouse>" : function('s:double_click'),
       \ "\<C-f>" : function('s:start_filter'),
+      \ "\<C-r>" : function('s:start_replace'),
+      \ "\<C-p>" : function('s:toggle_preview'),
+      \ "\<C-e>" : function('s:toggle_expr_mode'),
+      \ "\<Up>" : function('s:previous_match_history'),
+      \ "\<Down>" : function('s:next_match_history'),
       \ }
 
 if has('nvim')
@@ -284,13 +412,16 @@ endif
 " files: files for grep, @buffers means listed buffer.
 " dir: specific a directory for grep
 function! SpaceVim#plugins#flygrep#open(agrv) abort
+  let s:mode = ''
+  " set default handle func: s:flygrep
+  let s:MPT._handle_fly = function('s:flygrep')
   noautocmd rightbelow split __flygrep__
+  let s:flygrep_buffer_id = bufnr('%')
   setlocal buftype=nofile bufhidden=wipe nobuflisted nolist noswapfile nowrap cursorline nospell nonu norelativenumber
   let save_tve = &t_ve
   setlocal t_ve=
   " setlocal nomodifiable
   setf SpaceVimFlyGrep
-  redraw!
   let s:MPT._prompt.begin = get(a:agrv, 'input', '')
   let fs = get(a:agrv, 'files', '')
   if fs ==# '@buffers'
@@ -317,9 +448,14 @@ endfunction
 " Plugin API: SpaceVim#plugins#flygrep#lineNr() {{{
 function! SpaceVim#plugins#flygrep#lineNr() abort
   if getline(1) ==# ''
-    return ''
+    return 'no results'
   else
     return line('.') . '/' . line('$')
   endif
 endfunction
+
+function! SpaceVim#plugins#flygrep#mode() abort
+  return s:grep_mode . (empty(s:mode) ? '' : '(' . s:mode . ')')
+endfunction
+
 " }}}

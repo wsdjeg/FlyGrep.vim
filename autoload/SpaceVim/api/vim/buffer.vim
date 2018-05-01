@@ -1,3 +1,11 @@
+"=============================================================================
+" buffer.vim --- SpaceVim buffer API
+" Copyright (c) 2016-2017 Wang Shidong & Contributors
+" Author: Wang Shidong < wsdjeg at 163.com >
+" URL: https://spacevim.org
+" License: GPLv3
+"=============================================================================
+
 let s:self = {}
 
 
@@ -54,15 +62,17 @@ endfunction
 
 " just same as nvim_buf_set_lines
 function! s:self.buf_set_lines(buffer, start, end, strict_indexing, replacement) abort
+  let ma = getbufvar(a:buffer, '&ma')
+  call setbufvar(a:buffer,'&ma', 1)
   if exists('*nvim_buf_set_lines')
     call nvim_buf_set_lines(a:buffer, a:start, a:end, a:strict_indexing, a:replacement)
   elseif has('python')
     py import vim
     py import string
     if bufexists(a:buffer)
-      py bufnr = string.atoi(vim.eval("a:buffer"))
-      py start_line = string.atoi(vim.eval("a:start"))
-      py end_line = string.atoi(vim.eval("a:end"))
+      py bufnr = int(vim.eval("a:buffer"))
+      py start_line = int(vim.eval("a:start"))
+      py end_line = int(vim.eval("a:end"))
       py lines = vim.eval("a:replacement")
       py vim.buffers[bufnr][start_line:end_line] = lines
     endif
@@ -70,9 +80,9 @@ function! s:self.buf_set_lines(buffer, start, end, strict_indexing, replacement)
     py3 import vim
     py3 import string
     if bufexists(a:buffer)
-      py3 bufnr = string.atoi(vim.eval("a:buffer"))
-      py3 start_line = string.atoi(vim.eval("a:start"))
-      py3 end_line = string.atoi(vim.eval("a:end"))
+      py3 bufnr = int(vim.eval("a:buffer"))
+      py3 start_line = int(vim.eval("a:start"))
+      py3 end_line = int(vim.eval("a:end"))
       py3 lines = vim.eval("a:replacement")
       py3 vim.buffers[bufnr][start_line:end_line] = lines
     endif
@@ -85,6 +95,7 @@ function! s:self.buf_set_lines(buffer, start, end, strict_indexing, replacement)
     exe 'b' . a:buffer
     call setline(a:start - 1, a:replacement)
   endif
+  call setbufvar(a:buffer,'&ma', ma)
 endfunction
 
 

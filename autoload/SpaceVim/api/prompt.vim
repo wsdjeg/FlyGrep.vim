@@ -1,3 +1,11 @@
+"=============================================================================
+" prompt.vim --- SpaceVim prompt API
+" Copyright (c) 2016-2017 Wang Shidong & Contributors
+" Author: Wang Shidong < wsdjeg at 163.com >
+" URL: https://spacevim.org
+" License: GPLv3
+"=============================================================================
+
 ""
 " @section prompt, api-prompt
 " @parentsection api
@@ -131,11 +139,14 @@ func! s:self._handle_input(...) abort
 endf
 
 func! s:self._build_prompt() abort
-  redraw
+  normal! :
   echohl Comment | echon self._prompt.mpt
   echohl None | echon self._prompt.begin
   echohl Wildmenu | echon self._prompt.cursor
   echohl None | echon self._prompt.end
+  if empty(self._prompt.cursor) && !has('nvim')
+    echohl Comment | echon '_' | echohl None
+  endif
 endf
 
 function! s:self._clear_prompt() abort
