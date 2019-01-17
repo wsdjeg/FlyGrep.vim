@@ -33,4 +33,8 @@ let g:FlyGrep_search_tools = ['ag', 'rg', 'grep', 'pt', 'ack']
 " Enable FlyGrep statusline
 let g:FlyGrep_enable_statusline = 1
 
+""
+" Set FlyGrep default command prompt
+let g:spacevim_commandline_prompt = '➭'
+
 command! -nargs=0 FlyGrep call FlyGrep#open({})
