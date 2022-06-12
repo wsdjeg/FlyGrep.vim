@@ -1,6 +1,6 @@
 "=============================================================================
 " FlyGrep.vim --- Fly grep in vim
-" Copyright (c) 2016-2017 Shidong Wang & Contributors
+" Copyright (c) 2016-2022 Shidong Wang & Contributors
 " Author: Shidong Wang < wsdjeg@outlook.com >
 " URL: https://github.com/wsdjeg/FlyGrep.vim
 " License: MIT license
