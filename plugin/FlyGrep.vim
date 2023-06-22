@@ -40,3 +40,4 @@ let g:FlyGrep_enable_statusline = get(g:, 'FlyGrep_enable_statusline', 1)
 let g:spacevim_commandline_prompt = get(g:, 'spacevim_commandline_prompt', '➭')
 
 command! -nargs=0 FlyGrep call FlyGrep#open({})
+
