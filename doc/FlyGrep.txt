@@ -5,6 +5,20 @@ Wang Shidong                                               *flygrep* *FlyGrep*
 CONTENTS                                                    *FlyGrep-contents*
   1. Introduction..............................................|FlyGrep-intro|
   2. CONFIGURATION............................................|FlyGrep-config|
+  3. Functions.............................................|FlyGrep-functions|
+  4. API.........................................................|FlyGrep-api|
+      1. data#dict.....................................|FlyGrep-api-data-dict|
+      2. data#list.....................................|FlyGrep-api-data-list|
+      3. data#string.................................|FlyGrep-api-data-string|
+      4. file...............................................|FlyGrep-api-file|
+      5. job.................................................|FlyGrep-api-job|
+      6. logger...........................................|FlyGrep-api-logger|
+      7. prompt...........................................|FlyGrep-api-prompt|
+      8. system...........................................|FlyGrep-api-system|
+      9. time...............................................|FlyGrep-api-time|
+      10. vim#buffer..................................|FlyGrep-api-vim-buffer|
+      11. vim#compatible..........................|FlyGrep-api-vim-compatible|
+      12. vim#window..................................|FlyGrep-api-vim-window|
 
 ==============================================================================
 INTRODUCTION                                                   *FlyGrep-intro*
@@ -31,6 +45,280 @@ Enable FlyGrep statusline
 
                                                *g:spacevim_commandline_prompt*
 Set FlyGrep default command prompt
+
+==============================================================================
+FUNCTIONS                                                  *FlyGrep-functions*
+
+SpaceVim#logger#setLevel({level})                 *SpaceVim#logger#setLevel()*
+  Set debug level of SpaceVim. Default is 1.
+
+      1 : log all messages
+
+      2 : log warning and error messages
+
+      3 : log error messages only
+
+==============================================================================
+API                                                              *FlyGrep-api*
+
+SpaceVim contains a variety of public apis. To using the api, you need to make
+sure SpaceVim has been added to your &rtp. after that, you can use
+|SpaceVim#api#import| to import the API you need.
+
+USAGE
+
+This is just an example, and it works well in old version vim.
+>
+  let s:json = SpaceVim#api#import('data#json')
+  let rst = s:json.json_encode(onject)
+  let rst = s:json.json_decode(string)
+<
+
+here is list of resources where SpaceVim comes from:
+
+vital: https://github.com/vim-jp/vital.vim
+
+==============================================================================
+DATA#DICT                                              *FlyGrep-api-data-dict*
+
+provides some functions to manipulate a dict.
+
+make({keys}, {values}[, {fill}])
+
+  make a dictionary from two list, the {keys} and {values}.
+
+swap({dict})
+
+  swap the keys and values in a dictionary.
+
+make_index
+
+  make a dictionary from a list, use
+
+==============================================================================
+DATA#LIST                                              *FlyGrep-api-data-list*
+
+provides some functions to manipulate a list.
+
+pop({list})
+
+  Removes the last element from {list} and returns the element, as if the
+{list} is a stack.
+
+push({list})
+
+  Appends {val} to the end of {list} and returns the list itself, as if the
+{list} is a stack.
+
+listpart({list}, {start}[, {len}])
+
+  The result is a List, which is part of {list}, starting from index {start},
+with the length {len}
+
+replace(list, begin, end, re_list)
+
+  replace {list} from {begin} to {end} with {re_list}
+
+shift({list})
+
+  remove first item in a {list}, and return the item
+
+unshift({list})
+
+ insert an item to the begin of the {list}
+
+clear({list})
+
+ clear items in the {list}
+
+char_range({from}, {to})
+
+ return a characters list based on the ascii number range.
+
+==============================================================================
+DATA#STRING                                          *FlyGrep-api-data-string*
+
+
+FUNCTIONS
+
+split(str [, sep [, keepempty[, max]]])
+
+  run vim command, and return the output of such command.
+
+trim(str)
+
+  remove space at the begin and end of a string, same as |trim()|
+
+fill(str, length[, char])
+
+  fill string to length with {char}, if {char} is omnit, a space is used.
+
+==============================================================================
+FILE                                                        *FlyGrep-api-file*
+
+The `file` api provides basic functions to manage file. The following
+functions can be used:
+
+`fticon(path)`: get the filetype icon of path
+`write(msg, fname)`: append msg to fname.
+`override(msg, fname)`: override fname with msg.
+`read(fname)`: read the context of fname.
+`ls(dir, if_file_only)`: list files and directories in dir
+`updatefiles(files)`: update all files
+`unify_path(path, ...)`: unify the format of path
+`path_to_fname(path)`: get unify string of a path.
+`findfile(pattern, dir)`: find path match pattern in dir.
+`finddir(pattern, dir)`: find directory match pattern in dir
+
+Example:
+>
+  let s:FILE = SpaceVim#api#import('file')
+<
+
+==============================================================================
+JOB                                                          *FlyGrep-api-job*
+
+provides some functions to manager job
+
+start({cmd}[, {opt}])
+
+  spawns {cmd} as a job. {opts} is a dictionary with these keys:
+
+  on_stdout: stdout event handler (function name or Funcref)
+
+  on_stderr: stderr event handler (function name or Funcref)
+
+  on_exit: exit event handler (function name or Funcref)
+
+  cwd: working directory of the job; defaults to current directory
+
+==============================================================================
+LOGGER                                                    *FlyGrep-api-logger*
+
+provides some functions to manager logger
+
+set_silent({silent})
+
+  {silent} is a Boolean. by default it is false, and log will be print to
+screen.
+
+==============================================================================
+PROMPT                                                    *FlyGrep-api-prompt*
+
+open()
+
+Create a cmdline prompt, use while loop to get the input from user. The
+default mapping for prompt is:
+>
+  <Bs>            remove last character
+  <C-w>           remove the Word before the cursor
+  <C-u>           remove the Line before the cursor
+  <C-k>           remove the Line after the cursor
+  <C-a> / <Home>  Go to the beginning of the line
+  <C-e> / <End>   Go to the end of the line
+<
+
+==============================================================================
+SYSTEM                                                    *FlyGrep-api-system*
+
+name()
+
+Return the name of current os, availibel value is: linux, cygwin, windows and
+mac.
+
+==============================================================================
+TIME                                                        *FlyGrep-api-time*
+
+`time` api provides basic functions to get time information.
+
+current_time()
+
+  get current time, the format is `%I:%M %p`
+
+current_date()
+
+  get current date, the format is `%a %b %d`
+
+==============================================================================
+VIM#BUFFER                                            *FlyGrep-api-vim-buffer*
+
+INTRO
+
+vim#buffer API provides some basic functions for setting and getting config of
+vim buffer.
+
+FUNCTIONS
+
+is_cmdwin()
+
+Check if current windows is command line windows.
+
+open(opt)
+
+Open a new buffer with specifice options, return the buffer number, the {opt}
+is a dict with following keys:
+
+    bufname : the buffer name of the new buffer
+
+    mode: how to open the new buffer, default is vertical topleft split
+
+    initfunc: the function which will be call after creating buffer
+
+    cmd: the ex command which will be run after the new buffer is created
+
+==============================================================================
+VIM#COMPATIBLE                                    *FlyGrep-api-vim-compatible*
+
+
+FUNCTIONS
+
+execute(cmd)
+
+  run vim command, and return the output of such command.
+
+system(cmd)
+
+  like |system()| but can accept list as argv.
+
+systemlist(cmd)
+
+  like |systemlist()| but can accept list as argv.
+
+has(feature)
+
+  check if {feature} is supported in current version.
+
+getjumplist()
+
+  return a list of jump position, like result of |:jump|
+
+==============================================================================
+VIM#WINDOW                                            *FlyGrep-api-vim-window*
+
+INTRO
+
+`vim#window` API provides some basic functions for setting and getting config
+of vim window.
+
+FUNCTIONS
+
+get_cursor({winid})
+
+  Gets the cursor position in the window {winid}, to get the ID of a window,
+checkout |window-ID|.
+
+set_cursor({winid}, {pos})
+
+  Sets the cursor position to {pos} in the window {winid}.
+
+is_float({winid})
+
+  Check if the window is a floating windows, return `v:true` if the window
+is a floating window.
+
+winexists({winid})
+
+  Check if the window with {winid} exists in current tabpage.
 
 
 vim:tw=78:ts=8:ft=help:norl:
