@@ -21,7 +21,6 @@ local extend = function(t1, t2) -- {{{
 end
 
 local notifications = {}
-
 M.message = {}
 M.notification_width = 1
 M.notify_max_width = 0
@@ -30,7 +29,8 @@ M.bufnr = -1
 M.border = {}
 M.border.winid = -1
 M.border.bufnr = -1
-M.borderchars = { '─', '│', '─', '│', '┌', '┐', '┘', '└' }
+-- M.borderchars = { '─', '│', '─', '│', '┌', '┐', '┘', '└' }
+M.borderchars = { '─', '│', '─', '│', '╭', '╮', '╯', '╰' }
 M.title = ''
 M.winblend = 0
 M.timeout = 3000
@@ -41,8 +41,8 @@ M.notification_color = 'Normal'
 ---@param msg string|table<string> notification messages
 ---@param opts table notify options
 ---  - title: string, the notify title
-function M.notify(msg, opts) -- {{{
-  opts = opts or {}
+function M.notify(msg, ...) -- {{{
+  local opts = select(1, ...) or {}
   if M.is_list_of_string(msg) then
     extend(M.message, msg)
   elseif type(msg) == 'string' then
@@ -81,7 +81,7 @@ end
 local function msg_real_len(msg)
   local l = 0
   for _, m in pairs(msg) do
-    l = l + vim.fn.len(vim.fn.split(m, '\n'))
+    l = l + #vim.split(m, '\n')
   end
   return l
 end
