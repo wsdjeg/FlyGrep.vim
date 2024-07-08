@@ -32,6 +32,14 @@
 "     initfunc: the function which will be call after creating buffer
 "
 "     cmd: the ex command which will be run after the new buffer is created
+"
+" get_option(bufnr, name)
+"
+" Gets a buffer option value. 
+"
+" set_option(buf, opt, value)  
+"
+" Set a buffer option value.
 
 
 let s:self = {}
@@ -63,6 +71,19 @@ function! s:self.bufnr(...) abort
       return bufnr('%')
     else
       return call('bufnr', a:000)
+    endif
+  endif
+endfunction
+
+" bufname needs atleast one argv before patch-8.1.1924 has('patch-8.1.1924')
+function! s:self.bufname(...) abort
+  if has('patch-8.1.1924')
+    return call('bufname', a:000)
+  else
+    if a:0 ==# 0
+      return bufname('%')
+    else
+    return call('bufname', a:000)
     endif
   endif
 endfunction

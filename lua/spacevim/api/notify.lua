@@ -68,7 +68,7 @@ function M.notify(msg, ...) -- {{{
   vim.fn.setbufvar(M.border.bufnr, '&relativenumber', 0)
   vim.fn.setbufvar(M.border.bufnr, '&cursorline', 0)
   vim.fn.setbufvar(M.border.bufnr, '&bufhidden', 'wipe')
-  extend(notifications, { [M.hashkey] = M })
+  notifications[M.hashkey] = M
   M.increase_window()
   if type(msg) == 'table' then
     vim.fn.timer_start(M.timeout, M.close, { ['repeat'] = #msg })
@@ -137,7 +137,11 @@ function M.redraw_windows()
     return
   end
   M.begin_row = 2
-  for _, hashkey in ipairs(notifications) do
+  local viml_notify = vim.fn['SpaceVim#api#notify#shared_notifys']()
+  for hashkey, _ in pairs(viml_notify) do
+    M.begin_row = M.begin_row + msg_real_len(viml_notify[hashkey].message) + 2
+  end
+  for hashkey, _ in pairs(notifications) do
     if hashkey ~= M.hashkey then
       M.begin_row = M.begin_row + msg_real_len(notifications[hashkey].message) + 2
     else
@@ -177,7 +181,11 @@ function M.redraw_windows()
       focusable = false,
       noautocmd = true,
     })
-    vim.api.nvim_win_set_option(M.winid, 'winhighlight', 'Normal:' .. M.notification_color)
+    vim.api.nvim_win_set_option(M.winid, 'winhighlight', 'NormalFloat:Normal')
+    -- vim.api.nvim_win_set_option(M.winid, 'winhighlight', 'Search:' .. M.notification_color)
+    vim.fn.matchadd(M.notification_color, '.*', 10, -1, {
+      window = M.winid
+    })
     M.border.winid = vim.api.nvim_open_win(M.border.bufnr, false, {
       relative = 'editor',
       width = M.notification_width + 2,
@@ -187,7 +195,11 @@ function M.redraw_windows()
       focusable = false,
       noautocmd = true,
     })
-    vim.api.nvim_win_set_option(M.border.winid, 'winhighlight', 'Normal:VertSplit')
+    -- vim.api.nvim_win_set_option(M.border.winid, 'winhighlight', 'Normal:VertSplit')
+    -- vim.api.nvim_win_set_option(M.border.winid, 'winhighlight', 'Search:VertSplit')
+    vim.fn.matchadd('VertSplit', '.*', 10, -1, {
+      window = M.border.winid
+    })
     if
       M.winblend > 0
       and vim.fn.exists('&winblend') == 1
@@ -205,6 +217,8 @@ function M.redraw_windows()
     M.draw_border(M.title, M.notification_width, msg_real_len(M.message))
   )
   vim.api.nvim_buf_set_lines(M.bufnr, 0, -1, false, message_body(M.message))
+  vim.api.nvim_win_set_cursor(M.winid, {1, 0})
+  vim.api.nvim_win_set_cursor(M.border.winid, {1, 0})
 end
 
 function M.increase_window()
