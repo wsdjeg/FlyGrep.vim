@@ -1,5 +1,9 @@
 # FlyGrep.vim
 
+**Note:** Active development on FlyGrep.vim has stopped. The only future changes will be bug fixes.
+
+Please see [flygrep.nvim](https://github.com/wsdjeg/flygrep.nvim)
+
 [![](https://spacevim.org/img/build-with-SpaceVim.svg)](https://spacevim.org)
 [![GPLv3 License](https://img.spacevim.org/license-GPLv3-blue.svg)](LICENSE)
 
@@ -10,8 +14,8 @@
 - [Intro](#intro)
 - [Install](#install)
 - [Usage](#usage)
-  - [Command](#command)
-  - [Key bindings in FlyGrep window](#key-bindings-in-flygrep-window)
+    - [Command](#command)
+    - [Key bindings in FlyGrep window](#key-bindings-in-flygrep-window)
 - [FeedBack](#feedback)
 
 <!-- vim-markdown-toc -->
@@ -19,6 +23,7 @@
 ## Intro
 
 _FlyGrep.vim_ is a vim/neovim plugin to run the searching tool asynchronously, and display the result on the fly.
+
 
 ## Install
 
